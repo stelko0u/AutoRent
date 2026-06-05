@@ -257,13 +257,14 @@ export async function deleteCompany(id: number): Promise<void> {
 
 export async function updateCar(
   id: number,
-  formData: Partial<Car>,
+  formData: Partial<Car> | FormData,
 ): Promise<void> {
+  const isMultipart = formData instanceof FormData;
   const res = await fetch(`/api/company/cars?id=${id}`, {
     method: 'PATCH',
     credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(formData),
+    headers: isMultipart ? undefined : { 'Content-Type': 'application/json' },
+    body: isMultipart ? formData : JSON.stringify(formData),
   });
 
   if (!res.ok) {

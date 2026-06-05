@@ -9,6 +9,7 @@ import {
   ChartLine,
   Clipboard,
   Plus,
+  ShieldExclamation,
   UsersGear,
 } from '../icons';
 import { useTranslation } from '@/providers/LanguageProvider';
@@ -53,7 +54,7 @@ export default function AdminSidebar({
     {
       key: 'audit',
       label: t('adminSidebar.auditLogs'),
-      icon: <UsersGear className="w-5 h-5" />,
+      icon: <ShieldExclamation className="w-5 h-5" />,
     },
   ];
 

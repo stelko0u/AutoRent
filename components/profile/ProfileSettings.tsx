@@ -142,7 +142,9 @@ export default function ProfileSettings({ user }: ProfileSettingsProps) {
       router.refresh();
     } catch (err: unknown) {
       const message =
-        err instanceof Error ? err.message : t('profileSettings.failedProfileUpdate');
+        err instanceof Error
+          ? err.message
+          : t('profileSettings.failedProfileUpdate');
 
       setError(message);
     } finally {
@@ -182,7 +184,9 @@ export default function ProfileSettings({ user }: ProfileSettingsProps) {
       });
     } catch (err: unknown) {
       const message =
-        err instanceof Error ? err.message : t('profileSettings.failedPasswordChange');
+        err instanceof Error
+          ? err.message
+          : t('profileSettings.failedPasswordChange');
 
       setError(message);
     } finally {

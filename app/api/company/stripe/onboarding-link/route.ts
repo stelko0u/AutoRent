@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AuthError, requireAuthUserFromRequest } from '@/lib/auth';
 import { CompanyRepository } from '@/lib/repository/CompanyRepository';
-import { createCompanyStripeOnboardingLink } from '@/lib/services/stripe/companyStripe';
+import {
+  createCompanyStripeAccount,
+  createCompanyStripeOnboardingLink,
+} from '@/lib/services/stripe/companyStripe';
 
 export async function GET(req: NextRequest) {
   try {
@@ -33,15 +36,21 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    if (!company.stripeAccountId) {
-      return NextResponse.json(
-        { ok: false, error: 'Company has no Stripe account connected' },
-        { status: 400 },
-      );
+    let stripeAccountId = company.stripeAccountId;
+
+    if (!stripeAccountId) {
+      stripeAccountId = await createCompanyStripeAccount({
+        email: company.email,
+        companyName: company.name || company.email,
+      });
+
+      await CompanyRepository.update(company.id, {
+        stripeAccountId,
+      });
     }
 
     const onboardingUrl = await createCompanyStripeOnboardingLink(
-      company.stripeAccountId,
+      stripeAccountId,
     );
 
     return NextResponse.json({

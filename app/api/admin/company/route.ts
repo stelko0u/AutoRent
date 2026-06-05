@@ -2,8 +2,16 @@ import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { CompanyRepository } from '@/lib/repository/CompanyRepository';
 import { UserRepository } from '@/lib/repository/UserRepository';
+import { requireAdmin } from '@/lib/auth/requireAdmin';
+import {
+  createCompanyStripeAccount,
+  rollbackStripeAccount,
+} from '@/lib/services/stripe/companyStripe';
 
 export async function POST(req: Request) {
+  const check = await requireAdmin(req);
+  if (!check.ok) return check.resp;
+
   try {
     const body = await req.json();
     const { name, email, password, maintenancePercent } = body;
@@ -46,12 +54,20 @@ export async function POST(req: Request) {
     });
 
     let company;
+    let stripeAccountId: string | null = null;
+
     try {
+      stripeAccountId = await createCompanyStripeAccount({
+        email,
+        companyName: name,
+      });
+
       company = await CompanyRepository.create({
         ownerId: user.id,
         name,
         email,
         maintenancePercent: maintenance,
+        stripeAccountId,
       });
 
       // Update user with companyId
@@ -59,6 +75,17 @@ export async function POST(req: Request) {
         companyId: company.id,
       });
     } catch (e) {
+      if (company?.id) {
+        try {
+          await CompanyRepository.delete(company.id);
+        } catch (companyDeleteErr) {
+          console.error(
+            'Failed to rollback company after company create error:',
+            companyDeleteErr,
+          );
+        }
+      }
+
       try {
         await UserRepository.delete(user.id);
       } catch (delErr) {
@@ -66,6 +93,10 @@ export async function POST(req: Request) {
           'Failed to rollback user after company create error:',
           delErr,
         );
+      }
+
+      if (stripeAccountId) {
+        await rollbackStripeAccount(stripeAccountId);
       }
 
       console.warn('Create company failed:', e);

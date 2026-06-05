@@ -35,6 +35,7 @@ export { default as MoneyBill1 } from "./MoneyBill1";
 export { default as PenCircle } from "./PenCircle";
 export { default as Plus } from "./Plus";
 export { default as ScrewdriverWrench } from "./ScrewdriverWrench";
+export { default as ShieldExclamation } from "./ShieldExclamation";
 export { default as Transmission } from "./Transmission";
 export { default as TriangleExclamation } from "./TriangleExclamation";
 export { default as User } from "./User";

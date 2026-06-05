@@ -35,6 +35,8 @@ type CreateParsedInput = {
   officeId: number | null;
 };
 
+type UpdateParsedInput = Record<string, unknown>;
+
 export async function getCompanyCars(companyId: number) {
   return CarRepository.findManyByCompanyId(companyId);
 }
@@ -230,12 +232,54 @@ export async function updateCompanyCar(
     throw new Error('UNAUTHORIZED_CAR_ACCESS');
   }
 
-  let body: Record<string, unknown>;
+  const contentType = (req.headers.get('content-type') || '').toLowerCase();
+  let body: UpdateParsedInput;
 
-  try {
-    body = (await req.json()) as Record<string, unknown>;
-  } catch {
-    throw new Error('INVALID_JSON_BODY');
+  if (contentType.includes('multipart/form-data')) {
+    const form = await req.formData();
+    body = {};
+
+    for (const key of [
+      'make',
+      'model',
+      'year',
+      'pricePerDay',
+      'power',
+      'displacement',
+      'carType',
+      'transmission',
+      'transmissionType',
+      'fuelType',
+      'officeId',
+    ]) {
+      const value = form.get(key);
+
+      if (value !== null && typeof value !== 'object') {
+        body[key] = value;
+      }
+    }
+
+    const keptImages = form
+      .getAll('existingImages')
+      .filter((value): value is string => typeof value === 'string');
+    const fileEntries = form
+      .getAll('images')
+      .filter((value): value is File => value instanceof File);
+    const uploadedImages = await saveCompanyCarImages(fileEntries, companyId);
+
+    if (
+      form.get('imagesTouched') === '1' ||
+      keptImages.length > 0 ||
+      uploadedImages.length > 0
+    ) {
+      body.images = [...keptImages, ...uploadedImages];
+    }
+  } else {
+    try {
+      body = (await req.json()) as Record<string, unknown>;
+    } catch {
+      throw new Error('INVALID_JSON_BODY');
+    }
   }
 
   const updateInput: Record<string, unknown> = {};

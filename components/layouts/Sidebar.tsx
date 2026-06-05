@@ -17,6 +17,7 @@ import {
   MagnifyingGlassPlus,
   MapPin,
   ScrewdriverWrench,
+  ShieldExclamation,
   TriangleExclamation,
   User,
   UsersGear,
@@ -147,10 +148,10 @@ export default function Sidebar({
         icon: <UsersGear className="w-6 h-6" />,
       },
       {
-        label: t('nav.reports'),
+        label: t('nav.auditLogs'),
         key: 'reports',
-        href: '/admin/reports',
-        icon: <TriangleExclamation className="w-6 h-6" />,
+        href: '/admin/?tab=audit',
+        icon: <ShieldExclamation className="w-6 h-6" />,
       },
       {
         label: t('nav.about'),

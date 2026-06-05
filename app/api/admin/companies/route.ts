@@ -2,10 +2,8 @@ import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth/requireAdmin';
 import { CompanyRepository } from '@/lib/repository/CompanyRepository';
 import { UserRepository } from '@/lib/repository/UserRepository';
-import bcrypt from 'bcryptjs';
 import { ZodError } from 'zod';
-import { sendCompanyCredentialsEmail } from '@/lib/mail/sendCompanyCredentialsEmail';
-import { generateTemporaryPassword } from '@/lib/utils/password';
+import { onboardCompany } from '@/lib/services/company/onBoardCompany';
 import {
   adminCompanyPayloadSchema,
   adminCompanyUpdateSchema,
@@ -98,44 +96,14 @@ export async function POST(req: Request) {
       );
     }
 
-    const temporaryPassword = generateTemporaryPassword();
-    const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
-
-    const user = await UserRepository.create({
-      email,
-      password: hashedPassword,
+    const { company, mailInfo } = await onboardCompany({
       name,
-      role: 'COMPANY',
-      emailVerified: true,
-      mustChangePassword: true,
+      email,
+      maintenancePercent,
+      locale,
     });
 
-    try {
-      const company = await CompanyRepository.create({
-        ownerId: user.id,
-        name,
-        email,
-        maintenancePercent,
-      });
-
-      await UserRepository.update(user.id, {
-        companyId: company.id,
-        mustChangePassword: true,
-      });
-
-      const mailInfo = await sendCompanyCredentialsEmail({
-        to: email,
-        companyName: name,
-        loginEmail: email,
-        temporaryPassword,
-        locale,
-      });
-
-      return NextResponse.json({ ok: true, company, mailInfo });
-    } catch (createErr) {
-      await UserRepository.delete(user.id);
-      throw createErr;
-    }
+    return NextResponse.json({ ok: true, company, mailInfo });
   } catch (err) {
     console.error('POST /api/admin/companies error:', err);
 
@@ -168,7 +136,14 @@ export async function DELETE(req: Request) {
       );
     }
 
+    const ownerId = company.ownerId;
+
     await CompanyRepository.delete(id);
+
+    if (ownerId) {
+      await UserRepository.delete(ownerId);
+    }
+
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error('DELETE /api/admin/companies error:', err);

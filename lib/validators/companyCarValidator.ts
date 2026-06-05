@@ -14,13 +14,11 @@ type Input = {
   carType: CarType | null;
   transmissionType: TransmissionType | null;
   fuelType: FuelType | null;
+  images?: string[];
 };
 
 export function validateCompanyCarInput(input: Input) {
-  const result = companyCarCreateSchema.safeParse({
-    ...input,
-    images: [],
-  });
+  const result = companyCarCreateSchema.safeParse(input);
 
   if (!result.success) {
     throw new Error(getCompanyCarZodErrorCode(result.error));

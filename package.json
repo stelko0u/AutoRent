@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "vitest run",
+    "test:report": "vitest run --reporter=default --reporter=json --outputFile=reports/test-results.json --coverage --coverage.reporter=lcov --coverage.reporter=text"
   },
   "dependencies": {
     "@stripe/react-stripe-js": "^5.6.0",
@@ -47,11 +49,13 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/react-modal": "^3.16.3",
+    "@vitest/coverage-v8": "^3.2.4",
     "autoprefixer": "^10.4.27",
     "eslint": "^9",
     "eslint-config-next": "16.1.2",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.6"
   }
 }

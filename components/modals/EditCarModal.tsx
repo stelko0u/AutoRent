@@ -9,6 +9,25 @@ import {
   transmissionKey,
 } from '@/lib/utils/vehicleLocalization';
 
+const imageCopy = {
+  bg: {
+    images: 'Снимки',
+    currentImage: 'Текуща снимка',
+    removeImage: 'Махни',
+    newImagesSelected: 'Избрани нови снимки: {{count}}',
+    imagesHint:
+      'Новите снимки ще се запазят заедно с текущите снимки, които не са премахнати.',
+  },
+  en: {
+    images: 'Images',
+    currentImage: 'Current image',
+    removeImage: 'Remove',
+    newImagesSelected: 'New images selected: {{count}}',
+    imagesHint:
+      'New images will be saved together with the current images that you have not removed.',
+  },
+};
+
 interface EditCarModalProps {
   car: Car;
   onClose: () => void;
@@ -24,7 +43,8 @@ export default function EditCarModal({
   onClose,
   onSuccess,
 }: EditCarModalProps) {
-  const { t } = useTranslation();
+  const { locale, t } = useTranslation();
+  const imageText = imageCopy[locale];
   const [formData, setFormData] = useState<Partial<Car>>({
     make: car.make,
     model: car.model,
@@ -36,6 +56,10 @@ export default function EditCarModal({
     power: car.power,
     displacement: car.displacement,
   });
+  const [existingImages, setExistingImages] = useState<string[]>(
+    () => car.images ?? [],
+  );
+  const [newImages, setNewImages] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (
@@ -56,12 +80,42 @@ export default function EditCarModal({
     }));
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNewImages(Array.from(e.target.files ?? []));
+  };
+
+  const removeExistingImage = (image: string) => {
+    setExistingImages((prev) => prev.filter((item) => item !== image));
+  };
+
+  const removeNewImage = (index: number) => {
+    setNewImages((prev) => prev.filter((_, itemIndex) => itemIndex !== index));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      await updateCar(car.id, formData);
+      const payload = new FormData();
+
+      for (const [key, value] of Object.entries(formData)) {
+        if (value !== undefined && value !== null) {
+          payload.append(key, String(value));
+        }
+      }
+
+      for (const image of existingImages) {
+        payload.append('existingImages', image);
+      }
+
+      payload.append('imagesTouched', '1');
+
+      for (const image of newImages) {
+        payload.append('images', image);
+      }
+
+      await updateCar(car.id, payload);
       onSuccess();
     } catch (error: unknown) {
       console.error('Error updating car:', error);
@@ -248,6 +302,68 @@ export default function EditCarModal({
                 className="text-gray-500 w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              {imageText.images}
+            </label>
+
+            {existingImages.length > 0 ? (
+              <div className="mb-3 grid grid-cols-3 gap-3">
+                {existingImages.map((image) => (
+                  <div key={image} className="relative overflow-hidden rounded border">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={image}
+                      alt={imageText.currentImage}
+                      className="h-20 w-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeExistingImage(image)}
+                      className="absolute right-1 top-1 rounded bg-red-600 px-2 py-0.5 text-xs text-white"
+                    >
+                      {imageText.removeImage}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+
+            {newImages.length > 0 ? (
+              <div className="mb-3 rounded border border-blue-100 bg-blue-50 p-3 text-sm text-blue-800">
+                <p className="mb-2 font-medium">
+                  {imageText.newImagesSelected.replace(
+                    '{{count}}',
+                    String(newImages.length),
+                  )}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {newImages.map((image, index) => (
+                    <button
+                      key={`${image.name}-${index}`}
+                      type="button"
+                      onClick={() => removeNewImage(index)}
+                      className="rounded-full bg-white px-3 py-1 text-xs text-blue-800 shadow-sm"
+                    >
+                      {image.name} x
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            <input
+              type="file"
+              accept="image/png,image/jpeg"
+              multiple
+              onChange={handleImageChange}
+              className="block w-full text-sm text-gray-600 file:mr-4 file:rounded file:border-0 file:bg-blue-600 file:px-4 file:py-2 file:text-sm file:text-white hover:file:bg-blue-700"
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              {imageText.imagesHint}
+            </p>
           </div>
 
           <div className="flex gap-3 justify-end pt-4">
