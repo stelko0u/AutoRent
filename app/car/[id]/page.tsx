@@ -333,7 +333,7 @@ function CarDetailPageInner() {
                 <p className="text-xl text-gray-600 mb-6">{car.year}</p>
               </div>
 
-              {user && (
+              {user?.role !== 'COMPANY' && (
                 <button
                   type="button"
                   onClick={handleLike}

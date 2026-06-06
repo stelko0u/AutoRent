@@ -14,6 +14,7 @@ type Input = {
   carType: CarType | null;
   transmissionType: TransmissionType | null;
   fuelType: FuelType | null;
+  officeId?: number | null;
   images?: string[];
 };
 

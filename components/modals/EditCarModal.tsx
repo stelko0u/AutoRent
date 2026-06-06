@@ -8,6 +8,14 @@ import {
   fuelTypeKey,
   transmissionKey,
 } from '@/lib/utils/vehicleLocalization';
+import { useEffect } from 'react';
+import { getCompanyOffices } from '@/lib/api/companyApi';
+
+interface OfficeOption {
+  id: number;
+  name?: string;
+  address?: string;
+}
 
 const imageCopy = {
   bg: {
@@ -55,12 +63,38 @@ export default function EditCarModal({
     fuelType: car.fuelType,
     power: car.power,
     displacement: car.displacement,
+    officeId: car.officeId,
   });
   const [existingImages, setExistingImages] = useState<string[]>(
     () => car.images ?? [],
   );
   const [newImages, setNewImages] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [offices, setOffices] = useState<OfficeOption[]>([]);
+
+  useEffect(() => {
+    async function loadOffices() {
+      try {
+        const data = await getCompanyOffices();
+
+        setOffices(
+          data
+            .filter(
+              (office): office is OfficeOption => typeof office.id === 'number',
+            )
+            .map((office) => ({
+              id: office.id,
+              name: office.name,
+              address: office.address,
+            })),
+        );
+      } catch {
+        setOffices([]);
+      }
+    }
+
+    void loadOffices();
+  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -74,7 +108,8 @@ export default function EditCarModal({
         name === 'year' ||
         name === 'pricePerDay' ||
         name === 'power' ||
-        name === 'displacement'
+        name === 'displacement' ||
+        name === 'officeId'
           ? Number(value)
           : value,
     }));
@@ -133,7 +168,9 @@ export default function EditCarModal({
       overlayClassName="fixed inset-0 bg-black/50 z-40 flex items-center justify-center"
     >
       <div>
-        <h2 className="text-2xl font-semibold mb-4 text-gray-800">{t('editCarModal.title')}</h2>
+        <h2 className="text-2xl font-semibold mb-4 text-gray-800">
+          {t('editCarModal.title')}
+        </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -303,6 +340,26 @@ export default function EditCarModal({
               />
             </div>
           </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Office
+            </label>
+
+            <select
+              name="officeId"
+              value={formData.officeId ?? ''}
+              onChange={handleChange}
+              className="text-gray-500 w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">No office</option>
+
+              {offices.map((office) => (
+                <option key={office.id} value={office.id}>
+                  {office.name || office.address || `Office #${office.id}`}
+                </option>
+              ))}
+            </select>
+          </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -312,7 +369,10 @@ export default function EditCarModal({
             {existingImages.length > 0 ? (
               <div className="mb-3 grid grid-cols-3 gap-3">
                 {existingImages.map((image) => (
-                  <div key={image} className="relative overflow-hidden rounded border">
+                  <div
+                    key={image}
+                    className="relative overflow-hidden rounded border"
+                  >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={image}
@@ -361,9 +421,7 @@ export default function EditCarModal({
               onChange={handleImageChange}
               className="block w-full text-sm text-gray-600 file:mr-4 file:rounded file:border-0 file:bg-blue-600 file:px-4 file:py-2 file:text-sm file:text-white hover:file:bg-blue-700"
             />
-            <p className="mt-1 text-xs text-gray-500">
-              {imageText.imagesHint}
-            </p>
+            <p className="mt-1 text-xs text-gray-500">{imageText.imagesHint}</p>
           </div>
 
           <div className="flex gap-3 justify-end pt-4">
@@ -380,7 +438,9 @@ export default function EditCarModal({
               disabled={isSubmitting}
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition disabled:opacity-50"
             >
-              {isSubmitting ? t('profileSettings.saving') : t('profileSettings.saveChanges')}
+              {isSubmitting
+                ? t('profileSettings.saving')
+                : t('profileSettings.saveChanges')}
             </button>
           </div>
         </form>

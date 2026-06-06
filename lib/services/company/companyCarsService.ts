@@ -188,7 +188,10 @@ export async function createCompanyCar(req: NextRequest, user: CompanyUser) {
   };
 }
 
-export async function deleteCompanyCar(carId: number, companyId: number) {
+export async function deleteCompanyCar(
+  carId: number,
+  companyId: number,
+): Promise<void> {
   if (!carId || Number.isNaN(carId)) {
     throw new Error('INVALID_CAR_ID');
   }
@@ -203,11 +206,17 @@ export async function deleteCompanyCar(carId: number, companyId: number) {
     throw new Error('UNAUTHORIZED_CAR_ACCESS');
   }
 
-  const reservationsCount =
-    await ReservationRepository.countReservationsByCarId(carId);
+  const reservations = await ReservationRepository.findByCar(carId);
 
-  if (reservationsCount > 0) {
-    throw new Error('CAR_HAS_RESERVATIONS');
+  const hasActiveReservations = reservations.some(
+    (reservation) =>
+      reservation.status === 'PENDING' ||
+      reservation.status === 'CONFIRMED' ||
+      reservation.status === 'IN_PROGRESS',
+  );
+
+  if (hasActiveReservations) {
+    throw new Error('CAR_HAS_ACTIVE_RESERVATIONS');
   }
 
   await CarRepository.delete(carId);
@@ -308,7 +317,8 @@ export async function updateCompanyCar(
       ) ??
       mapTransmissionType(
         body.transmissionType != null ? String(body.transmissionType) : null,
-      ) ?? undefined;
+      ) ??
+      undefined;
   }
 
   if (body.fuelType !== undefined) {

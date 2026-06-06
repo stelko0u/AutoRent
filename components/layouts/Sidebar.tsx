@@ -108,12 +108,12 @@ export default function Sidebar({
         href: '/company?tab=manage-cars',
         icon: <Cars className="w-6 h-6" />,
       },
-      {
-        label: t('nav.profile'),
-        key: 'profile',
-        href: '/profile',
-        icon: <User className="w-6 h-6" />,
-      },
+      // {
+      //   label: t('nav.profile'),
+      //   key: 'profile',
+      //   href: '/profile',
+      //   icon: <User className="w-6 h-6" />,
+      // },
       {
         label: t('nav.about'),
         key: 'about',

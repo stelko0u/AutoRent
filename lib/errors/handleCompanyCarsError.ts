@@ -58,6 +58,14 @@ export function handleCompanyCarsError(error: unknown) {
           { error: 'Missing or invalid transmission' },
           { status: 400 },
         );
+      case 'CAR_HAS_ACTIVE_RESERVATIONS':
+        return NextResponse.json(
+          {
+            error:
+              'Автомобилът има активни резервации и не може да бъде изтрит.',
+          },
+          { status: 400 },
+        );
 
       case 'INVALID_FUEL_TYPE':
         return NextResponse.json(

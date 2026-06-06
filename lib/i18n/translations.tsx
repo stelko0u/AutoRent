@@ -547,7 +547,7 @@ export const translations = {
       maintenancePercent: '% Поддръжка',
       maintenanceHint: 'Стойност между 0 и 100.',
       createCompany: 'Създай компания',
-      adminNewCompanyDetails: 'Детайли за новата компания',
+      newCompanyDetails: 'Детайли за новата компания',
     },
     adminUsers: {
       title: 'Управление на потребители',
