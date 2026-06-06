@@ -284,10 +284,81 @@ export function CarSearchProvider({
     [cars],
   );
 
-  const uniqueLocations = useMemo(
-    () => uniqueSorted(cars.map((car) => car.location)),
-    [cars],
-  );
+  const uniqueLocations = useMemo(() => {
+    const carsForLocations = cars.filter((car) => {
+      const query = normalizeValue(filters.query);
+
+      if (query) {
+        const haystack = [
+          car.name,
+          car.make,
+          car.model,
+          car.carType,
+          car.transmissionType,
+          car.fuelType,
+          car.location,
+          car.companyName ?? '',
+        ]
+          .join(' ')
+          .toLowerCase();
+
+        if (!haystack.includes(query)) {
+          return false;
+        }
+      }
+
+      if (filters.make && car.make !== filters.make) {
+        return false;
+      }
+
+      if (filters.bodyType && car.carType !== filters.bodyType) {
+        return false;
+      }
+
+      if (
+        filters.transmission &&
+        car.transmissionType !== filters.transmission
+      ) {
+        return false;
+      }
+
+      if (filters.fuelType && car.fuelType !== filters.fuelType) {
+        return false;
+      }
+
+      if (filters.minPrice && car.pricePerDay < Number(filters.minPrice)) {
+        return false;
+      }
+
+      if (filters.maxPrice && car.pricePerDay > Number(filters.maxPrice)) {
+        return false;
+      }
+
+      if (filters.minHorsepower && car.power < Number(filters.minHorsepower)) {
+        return false;
+      }
+
+      if (filters.maxHorsepower && car.power > Number(filters.maxHorsepower)) {
+        return false;
+      }
+
+      if (filters.yearFrom && car.year < Number(filters.yearFrom)) {
+        return false;
+      }
+
+      if (filters.yearTo && car.year > Number(filters.yearTo)) {
+        return false;
+      }
+
+      return true;
+    });
+
+    return uniqueSorted(
+      carsForLocations
+        .map((car) => car.location)
+        .filter((location): location is string => Boolean(location)),
+    );
+  }, [cars, filters]);
 
   const uniqueBodyTypes = useMemo(
     () => uniqueSorted(cars.map((car) => car.carType ?? '')),

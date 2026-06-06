@@ -12,7 +12,7 @@ import GasPump from '../../../components/icons/GasPump';
 import Transmission from '../../../components/icons/Transmission';
 import Car from '../../../components/icons/Car';
 import Cube from '../../../components/icons/Cube';
-
+import { useTranslation } from '@/providers/LanguageProvider';
 import { Car as CarType } from '../../../types/types';
 import {
   addFavoriteCar,
@@ -37,6 +37,7 @@ const CarLocationMap = dynamic(
 
 function CarDetailPageInner() {
   const router = useRouter();
+  const { t } = useTranslation();
   const params = useParams();
   const searchParams = useSearchParams();
 
@@ -79,7 +80,7 @@ function CarDetailPageInner() {
 
         setUser(loggedInUser);
       } catch (err) {
-        console.error('Failed to load user:', err);
+        console.error(t('carDetails.failedToLoadUser'), err);
 
         if (!mounted) {
           return;
@@ -128,7 +129,7 @@ function CarDetailPageInner() {
         }
 
         const message =
-          err instanceof Error ? err.message : 'Failed to load car';
+          err instanceof Error ? err.message : t('carDetails.failedToLoadCar');
         setError(message);
       } finally {
         if (mounted) {
@@ -166,7 +167,7 @@ function CarDetailPageInner() {
         );
         setLiked(isLiked);
       } catch (err) {
-        console.error('Failed to load favorite state:', err);
+        console.error(t('carDetails.failedToLoadFavoriteState'), err);
 
         if (!mounted) {
           return;
@@ -203,7 +204,7 @@ function CarDetailPageInner() {
         setCanAddReview(data.canAddReview);
         setActiveReservationId(data.reservationId);
       } catch (err) {
-        console.error('Error checking review eligibility:', err);
+        console.error(t('carDetails.errorCheckingEligibility'), err);
 
         if (!mounted) {
           return;
@@ -228,7 +229,7 @@ function CarDetailPageInner() {
     }
 
     if (!activeReservationId) {
-      throw new Error('No active reservation found');
+      throw new Error(t('carDetails.noActiveReservation'));
     }
 
     const newReview = await submitReview({
@@ -273,7 +274,7 @@ function CarDetailPageInner() {
     office?.address ||
     (office?.latitude && office?.longitude
       ? `${office.latitude}, ${office.longitude}`
-      : 'N/A');
+      : t('carDetails.notAvailable'));
 
   if (loading) {
     return (
@@ -290,14 +291,18 @@ function CarDetailPageInner() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-2">Error</h1>
-          <p className="text-gray-600">{error || 'Car not found'}</p>
+          <h1 className="text-2xl font-bold text-red-600 mb-2">
+            {t('carDetails.error')}
+          </h1>
+          <p className="text-gray-600">
+            {error || t('carDetails.failedToLoadCar')}
+          </p>
           <button
             type="button"
             onClick={() => router.push('/')}
             className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
           >
-            Go Home
+            {t('carDetails.goHome')}
           </button>
         </div>
       </div>
@@ -339,7 +344,9 @@ function CarDetailPageInner() {
                   onClick={handleLike}
                   disabled={likeLoading}
                   aria-label={
-                    liked ? 'Remove from favorites' : 'Add to favorites'
+                    liked
+                      ? t('carDetails.removeFavorite')
+                      : t('carDetails.addFavorite')
                   }
                 >
                   {liked ? (
@@ -356,49 +363,59 @@ function CarDetailPageInner() {
                 €{car.pricePerDay}
                 <span className="text-lg font-normal text-gray-600">
                   {' '}
-                  / day
+                  {t('carDetails.perDay')}
                 </span>
               </div>
             </div>
 
             <div className="mb-6">
               <h2 className="text-lg font-semibold mb-3 text-gray-600">
-                Specifications
+                {t('carDetails.specifications')}
               </h2>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center gap-2">
                   <Car className="text-gray-500 w-6 h-6" />
                   <span className="text-sm text-gray-600">
-                    {car.carType || 'N/A'}
+                    {car.carType
+                      ? t(`vehicle.bodyTypes.${car.carType.toLowerCase()}`)
+                      : t('carDetails.notAvailable')}
                   </span>
                 </div>
 
                 <div className="flex items-center gap-2">
                   <Transmission className="text-gray-500 w-6 h-6" />
                   <span className="text-sm text-gray-600">
-                    {car.transmissionType || 'N/A'}
+                    {car.transmissionType
+                      ? t(
+                          `vehicle.transmissions.${car.transmissionType.toLowerCase()}`,
+                        )
+                      : t('carDetails.notAvailable')}
                   </span>
                 </div>
 
                 <div className="flex items-center gap-2">
                   <GasPump className="text-gray-500 w-6 h-6" />
                   <span className="text-sm text-gray-600">
-                    {car.fuelType || 'N/A'}
+                    {car.fuelType
+                      ? t(`vehicle.fuelTypes.${car.fuelType.toLowerCase()}`)
+                      : t('carDetails.notAvailable')}
                   </span>
                 </div>
 
                 <div className="flex items-center gap-2">
                   <Engine className="text-gray-500 w-6 h-6" />
                   <span className="text-sm text-gray-600">
-                    {car.power || 'N/A'} HP
+                    {car.power
+                      ? `${car.power} ${t('vehicle.hp')}`
+                      : t('carDetails.notAvailable')}
                   </span>
                 </div>
 
                 <div className="flex items-center gap-2">
                   <Cube className="text-gray-500 w-6 h-6" />
                   <span className="text-sm text-gray-600">
-                    {car.displacement || 'N/A'} cc
+                    {car.displacement || t('carDetails.notAvailable')} cc
                   </span>
                 </div>
 
@@ -412,7 +429,7 @@ function CarDetailPageInner() {
             {car.company && (
               <div className="mb-6 p-4 bg-gray-50 rounded-lg">
                 <h3 className="text-sm font-semibold text-gray-700 mb-1">
-                  Rental Company
+                  {t('carDetails.rentalCompany')}
                 </h3>
                 <p className="text-gray-900">{car.company.name}</p>
               </div>
@@ -424,7 +441,7 @@ function CarDetailPageInner() {
                 onClick={() => router.push(`/reservation/${car.id}`)}
                 className="w-full px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition"
               >
-                Reserve Now
+                {t('carDetails.reserveNow')}
               </button>
             )}
           </div>

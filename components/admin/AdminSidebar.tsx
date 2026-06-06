@@ -106,7 +106,7 @@ export default function AdminSidebar({
         </div>
       </div>
 
-      <aside className="hidden min-h-screen w-64 flex-col border-r border-gray-200 bg-white p-6 md:flex">
+      <aside className="fixed left-0 top-0 hidden h-screen w-64 flex-col border-r border-gray-200 bg-white p-6 md:flex">
         <div className="mb-8 flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 font-bold text-white">
             AD

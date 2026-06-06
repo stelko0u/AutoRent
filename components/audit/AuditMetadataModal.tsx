@@ -85,6 +85,79 @@ function formatPrimitive(value: Primitive): string {
 
   return String(value);
 }
+function isDiffMetadata(metadata: Record<string, unknown>): metadata is Record<
+  string,
+  unknown
+> & {
+  before: Record<string, unknown>;
+  after: Record<string, unknown>;
+} {
+  return isRecord(metadata.before) && isRecord(metadata.after);
+}
+
+function renderDiffSection(
+  before: Record<string, unknown>,
+  after: Record<string, unknown>,
+): React.ReactNode {
+  const keys = Array.from(
+    new Set([...Object.keys(before), ...Object.keys(after)]),
+  );
+
+  const changedKeys = keys.filter(
+    (key) => JSON.stringify(before[key]) !== JSON.stringify(after[key]),
+  );
+
+  if (changedKeys.length === 0) {
+    return (
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-500">
+        Няма открити промени.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {changedKeys.map((key) => (
+        <div
+          key={key}
+          className="overflow-hidden rounded-2xl border border-slate-200 bg-white"
+        >
+          <div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
+            <div className="text-sm font-semibold text-slate-900">
+              {formatLabel(key)}
+            </div>
+          </div>
+
+          <div className="grid gap-px bg-slate-200 md:grid-cols-2">
+            <div className="bg-red-50 p-4">
+              <div className="mb-2 text-xs font-bold uppercase tracking-[0.15em] text-red-700">
+                Преди
+              </div>
+
+              <div className="rounded-xl border border-red-200 bg-white px-3 py-2 text-sm text-red-900">
+                {isRecord(before[key]) || Array.isArray(before[key])
+                  ? renderValue(before[key])
+                  : formatPrimitive(before[key] as Primitive)}
+              </div>
+            </div>
+
+            <div className="bg-green-50 p-4">
+              <div className="mb-2 text-xs font-bold uppercase tracking-[0.15em] text-green-700">
+                След
+              </div>
+
+              <div className="rounded-xl border border-green-200 bg-white px-3 py-2 text-sm text-green-900">
+                {isRecord(after[key]) || Array.isArray(after[key])
+                  ? renderValue(after[key])
+                  : formatPrimitive(after[key] as Primitive)}
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function renderValue(value: unknown): React.ReactNode {
   if (
@@ -187,12 +260,36 @@ function renderValue(value: unknown): React.ReactNode {
 }
 
 function renderMetadataSections(metadata: Record<string, unknown>) {
+  if (isDiffMetadata(metadata)) {
+    return (
+      <div className="space-y-4">
+        {'reason' in metadata && metadata.reason ? (
+          <section className="rounded-[24px] border border-slate-200 bg-slate-50 p-4">
+            <div className="mb-3 text-sm font-semibold text-slate-900">
+              Причина
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">
+              {String(metadata.reason)}
+            </div>
+          </section>
+        ) : null}
+
+        <section className="rounded-[24px] border border-slate-200 bg-slate-50 p-4">
+          <div className="mb-3 text-sm font-semibold text-slate-900">
+            Промени
+          </div>
+
+          {renderDiffSection(metadata.before, metadata.after)}
+        </section>
+      </div>
+    );
+  }
+
   const priorityKeys = [
     'reason',
     'source',
     'changedFields',
-    'before',
-    'after',
     'targetUser',
     'deletedUser',
     'deletedCompany',
@@ -205,13 +302,22 @@ function renderMetadataSections(metadata: Record<string, unknown>) {
   ];
 
   const entries = Object.entries(metadata);
+
   const sortedEntries = [...entries].sort(([a], [b]) => {
     const aIndex = priorityKeys.indexOf(a);
     const bIndex = priorityKeys.indexOf(b);
 
-    if (aIndex === -1 && bIndex === -1) return a.localeCompare(b);
-    if (aIndex === -1) return 1;
-    if (bIndex === -1) return -1;
+    if (aIndex === -1 && bIndex === -1) {
+      return a.localeCompare(b);
+    }
+
+    if (aIndex === -1) {
+      return 1;
+    }
+
+    if (bIndex === -1) {
+      return -1;
+    }
 
     return aIndex - bIndex;
   });
@@ -234,6 +340,7 @@ function renderMetadataSections(metadata: Record<string, unknown>) {
           <div className="mb-3 text-sm font-semibold text-slate-900">
             {formatLabel(key)}
           </div>
+
           {renderValue(value)}
         </section>
       ))}

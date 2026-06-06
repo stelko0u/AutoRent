@@ -47,7 +47,8 @@ export default function AdminShell({ children }: AdminShellProps) {
     <div className="min-h-screen bg-gray-50 text-gray-800">
       <div className="flex flex-col md:flex-row">
         <AdminSidebar active={active} setActive={setActive} />
-        <main className="flex-1 p-4 sm:p-6">
+        {/* <main className="flex-1 p-4 sm:p-6"> */}
+        <main className="ml-64 flex-1" >
           <header className="mb-6">
             {/* <h1 className="text-2xl font-semibold">
               Admin — {me?.name ?? 'User'}

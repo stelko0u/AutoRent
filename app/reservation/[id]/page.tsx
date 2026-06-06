@@ -62,7 +62,11 @@ export default function ReservationPage() {
         setReservations(data.reservations);
       } catch (err: unknown) {
         if (!isMounted) return;
-        setError(err instanceof Error ? err.message : t('reservationPage.failedToLoad'));
+        setError(
+          err instanceof Error
+            ? err.message
+            : t('reservationPage.failedToLoad'),
+        );
       } finally {
         if (isMounted) {
           setLoading(false);
@@ -387,7 +391,9 @@ export default function ReservationPage() {
               <>
                 <div className="space-y-3">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">{t('reservationPage.pickUp')}</span>
+                    <span className="text-gray-600">
+                      {t('reservationPage.pickUp')}
+                    </span>
                     <span className="font-medium text-gray-800">
                       {selectedStartDate.toLocaleDateString(
                         locale === 'bg' ? 'bg-BG' : 'en-US',
@@ -401,7 +407,9 @@ export default function ReservationPage() {
                   </div>
 
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">{t('reservationPage.dropOff')}</span>
+                    <span className="text-gray-600">
+                      {t('reservationPage.dropOff')}
+                    </span>
                     <span className="font-medium text-gray-800">
                       {selectedEndDate.toLocaleDateString(
                         locale === 'bg' ? 'bg-BG' : 'en-US',
@@ -415,7 +423,9 @@ export default function ReservationPage() {
                   </div>
 
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">{t('reservationPage.duration')}</span>
+                    <span className="text-gray-600">
+                      {t('reservationPage.duration')}
+                    </span>
                     <span className="font-medium text-gray-800">
                       {days}{' '}
                       {days === 1
@@ -425,7 +435,9 @@ export default function ReservationPage() {
                   </div>
 
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">{t('reservationPage.payment')}</span>
+                    <span className="text-gray-600">
+                      {t('reservationPage.payment')}
+                    </span>
                     <span className="font-medium text-gray-800">
                       {paymentMethod === 'CARD'
                         ? t('reservationPage.onlineCard')
@@ -445,7 +457,9 @@ export default function ReservationPage() {
                   </div>
 
                   <div className="flex justify-between items-center text-lg font-bold pt-2 border-t">
-                    <span className="text-gray-800">{t('reservationPage.total')}</span>
+                    <span className="text-gray-800">
+                      {t('reservationPage.total')}
+                    </span>
                     <span className="text-indigo-600">€{total.toFixed(2)}</span>
                   </div>
                 </div>

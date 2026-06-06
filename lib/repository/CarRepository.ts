@@ -165,11 +165,16 @@ export class CarRepository {
       conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
     const sql = `
-      SELECT c.*
-      FROM "Car" c
-      ${where}
-      ORDER BY c.id DESC
-    `;
+  SELECT
+    c.*,
+    o.name as "location",
+    comp.name as "companyName"
+  FROM "Car" c
+  LEFT JOIN "Office" o ON o.id = c."officeId"
+  LEFT JOIN "Company" comp ON comp.id = c."companyId"
+  ${where}
+  ORDER BY c.id DESC
+`;
 
     return query(sql, values);
   }

@@ -87,7 +87,7 @@ export async function sendReservationPaymentEmail(
     new Date(reservation.endDate).getTime() -
     new Date(reservation.startDate).getTime();
 
-  const days = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1);
+  const days = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)) );
   const totalPrice = Number(reservation.totalPrice || 0).toFixed(2);
   const copy = getEmailTranslations(locale).reservationPayment;
   const fullName = `${reservation.firstName} ${reservation.lastName}`.trim();
