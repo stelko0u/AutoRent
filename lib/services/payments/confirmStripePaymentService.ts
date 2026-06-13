@@ -67,7 +67,9 @@ export async function confirmStripePayment(
   let stripeInvoice: Stripe.Invoice | null = null;
   let invoiceEmailSent = false;
   let invoiceWarning: string | null = null;
-
+  console.log('paymentIntent.amount', paymentIntent.amount);
+  console.log('totalAmount', totalAmount);
+  console.log('reservation.totalPrice', reservation.totalPrice);
   if (!wasAlreadyPaid) {
     const invoiceResult = await tryCreateAndSendCustomerInvoice({
       company,

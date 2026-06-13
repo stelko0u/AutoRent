@@ -182,7 +182,7 @@ export default function CompanyOffices({ companyId }: CompanyOfficesProps) {
         </div>
       ) : null}
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      {/* <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <CompanyPanelMetricCard
           title={t('companyOffices.locations')}
           value={offices.length}
@@ -211,7 +211,7 @@ export default function CompanyOffices({ companyId }: CompanyOfficesProps) {
           icon={<MapPin className="h-5 w-5 text-amber-600" />}
           accentClassName="bg-amber-50"
         />
-      </section>
+      </section> */}
 
       <div className="grid gap-6 xl:grid-cols-[1fr_1.5fr]">
         <CompanyPanelCard

@@ -72,26 +72,65 @@ export async function createCustomerPaymentStripeInvoice(
   );
 
   const amountCents = Math.round(Number(input.amountPaid || 0) * 100);
+  console.log('amountPaid', input.amountPaid);
+  console.log('amountCents', amountCents);
+  // await stripe.invoiceItems.create({
+  //   customer: customer.id,
+  //   currency: 'eur',
+  //   amount: amountCents,
+  //   description: [
+  //     `Резервация #${input.reservation.id}`,
+  //     `${input.car.make} ${input.car.model} ${input.car.year}`,
+  //     `${formatDate(input.reservation.startDate)} - ${formatDate(input.reservation.endDate)}`,
+  //   ].join(' | '),
+  //   metadata: {
+  //     kind: 'customer_card_payment_invoice_item',
+  //     companyId: String(input.company.id),
+  //     reservationId: String(input.reservation.id),
+  //     paymentIntentId: input.paymentIntentId,
+  //     chargeId: input.chargeId || '',
+  //     platformFee: Number(input.platformFee || 0).toFixed(2),
+  //     companyEarnings: Number(input.companyEarnings || 0).toFixed(2),
+  //   },
+  // });
 
-  await stripe.invoiceItems.create({
-    customer: customer.id,
-    currency: 'eur',
-    amount: amountCents,
-    description: [
-      `Резервация #${input.reservation.id}`,
-      `${input.car.make} ${input.car.model} ${input.car.year}`,
-      `${formatDate(input.reservation.startDate)} - ${formatDate(input.reservation.endDate)}`,
-    ].join(' | '),
-    metadata: {
-      kind: 'customer_card_payment_invoice_item',
-      companyId: String(input.company.id),
-      reservationId: String(input.reservation.id),
-      paymentIntentId: input.paymentIntentId,
-      chargeId: input.chargeId || '',
-      platformFee: Number(input.platformFee || 0).toFixed(2),
-      companyEarnings: Number(input.companyEarnings || 0).toFixed(2),
-    },
-  });
+  // const draftInvoice = await stripe.invoices.create({
+  //   customer: customer.id,
+  //   collection_method: 'send_invoice',
+  //   auto_advance: false,
+  //   currency: 'eur',
+  //   days_until_due: 0,
+  //   description: `Фактура за платена резервация #${input.reservation.id}`,
+  //   metadata: {
+  //     kind: 'customer_card_payment_invoice',
+  //     companyId: String(input.company.id),
+  //     companyName: input.company.name || '',
+  //     reservationId: String(input.reservation.id),
+  //     paymentIntentId: input.paymentIntentId,
+  //     chargeId: input.chargeId || '',
+  //     carId: String(input.car.id),
+  //     grossAmount: Number(input.amountPaid || 0).toFixed(2),
+  //     platformFee: Number(input.platformFee || 0).toFixed(2),
+  //     companyEarnings: Number(input.companyEarnings || 0).toFixed(2),
+  //     customerEmail: input.reservation.email,
+  //     customerName:
+  //       `${input.reservation.firstName} ${input.reservation.lastName}`.trim(),
+  //   },
+  //   custom_fields: [
+  //     {
+  //       name: 'Резервация',
+  //       value: `#${input.reservation.id}`,
+  //     },
+  //     {
+  //       name: 'Автомобил',
+  //       value: `${input.car.make} ${input.car.model} ${input.car.year}`,
+  //     },
+  //     {
+  //       name: 'Период',
+  //       value: `${formatDate(input.reservation.startDate)} - ${formatDate(input.reservation.endDate)}`,
+  //     },
+  //   ],
+  // });
 
   const draftInvoice = await stripe.invoices.create({
     customer: customer.id,
@@ -131,25 +170,71 @@ export async function createCustomerPaymentStripeInvoice(
     ],
   });
 
+  await stripe.invoiceItems.create({
+    customer: customer.id,
+    invoice: draftInvoice.id,
+    currency: 'eur',
+    amount: amountCents,
+    description: [
+      `Резервация #${input.reservation.id}`,
+      `${input.car.make} ${input.car.model} ${input.car.year}`,
+      `${formatDate(input.reservation.startDate)} - ${formatDate(input.reservation.endDate)}`,
+    ].join(' | '),
+    metadata: {
+      kind: 'customer_card_payment_invoice_item',
+      companyId: String(input.company.id),
+      reservationId: String(input.reservation.id),
+      paymentIntentId: input.paymentIntentId,
+      chargeId: input.chargeId || '',
+      platformFee: Number(input.platformFee || 0).toFixed(2),
+      companyEarnings: Number(input.companyEarnings || 0).toFixed(2),
+    },
+  });
+
+  const previewInvoice = await stripe.invoices.retrieve(draftInvoice.id, {
+    expand: ['lines'],
+  });
+
+  console.log(
+    'invoice lines',
+    previewInvoice.lines.data.map((line) => ({
+      amount: line.amount,
+      description: line.description,
+    })),
+  );
+
+  console.log('invoice total before finalize', previewInvoice.total);
+
   const finalized = await stripe.invoices.finalizeInvoice(draftInvoice.id, {
     auto_advance: false,
   });
 
-  // МНОГО ВАЖНО:
-  // не опитвай да плащаш invoice, ако вече е paid
+  console.log('finalized.total', finalized.total);
+  console.log('finalized.amount_paid', finalized.amount_paid);
+  console.log('finalized.amount_due', finalized.amount_due);
+
   if (finalized.status === 'paid') {
     return finalized;
   }
 
-  // ако е open, маркирай го платен ръчно, защото плащането вече е минало през PaymentIntent
   if (finalized.status === 'open') {
     const paidInvoice = await stripe.invoices.pay(finalized.id, {
       paid_out_of_band: true,
     });
+
+    console.log('paidInvoice.status', paidInvoice.status);
+    console.log('paidInvoice.total', paidInvoice.total);
+    console.log('paidInvoice.amount_paid', paidInvoice.amount_paid);
+    console.log('paidInvoice.amount_due', paidInvoice.amount_due);
+    console.log('paidInvoice.invoice_pdf', paidInvoice.invoice_pdf);
+    console.log(
+      'paidInvoice.hosted_invoice_url',
+      paidInvoice.hosted_invoice_url,
+    );
+
     return paidInvoice;
   }
 
-  // fallback: върни каквото имаме, вместо да чупим whole flow-а
   return finalized;
 }
 
